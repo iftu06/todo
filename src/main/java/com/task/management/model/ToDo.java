@@ -1,14 +1,19 @@
 package com.task.management.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Entity
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ToDo implements Comparable {
 
     private Integer id;
@@ -29,7 +34,7 @@ public class ToDo implements Comparable {
         this.id = id;
     }
 
-    @NotEmpty
+    @NotEmpty(message = "Please enter a title")
     public String getTitle() {
         return title;
     }
@@ -46,7 +51,7 @@ public class ToDo implements Comparable {
         this.description = description;
     }
 
-    @NotEmpty
+    @NotNull
     @Enumerated(EnumType.STRING)
     public Priority getPriority() {
         return priority;
@@ -64,7 +69,6 @@ public class ToDo implements Comparable {
         this.localDate = localDate;
     }
 
-    @NotEmpty
     @Enumerated(EnumType.STRING)
     public ToDoStatus getStatus() {
         return status;

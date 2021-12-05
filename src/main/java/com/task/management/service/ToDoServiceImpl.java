@@ -4,7 +4,9 @@ import com.task.management.Utillity.DateTimeUtil;
 import com.task.management.Utillity.ToDoSearchField;
 import com.task.management.dto.ToDoDto;
 import com.task.management.exception.ResourceNotFoundException;
+import com.task.management.exception.ToDoException;
 import com.task.management.exception.ToDoExceptionFactory;
+import com.task.management.model.Priority;
 import com.task.management.model.ToDo;
 import com.task.management.model.ToDoStatus;
 import com.task.management.repository.ToDoRepository;
@@ -52,13 +54,11 @@ public class ToDoServiceImpl implements ToDoService {
             throw ToDoExceptionFactory.UNSUPPORTED_OPERATION;
         }
 
-        if (toDo.getId() == null && toDo.getStatus().equals(ToDoStatus.DONE)) {
+        if (toDo.getStatus() != null) {
             throw ToDoExceptionFactory.UNSUPPORTED_OPERATION;
         }
 
-        if (toDo.getStatus() == null) {
-            toDo.setStatus(ToDoStatus.STARTED);
-        }
+        toDo.setStatus(ToDoStatus.STARTED);
 
         ToDo todoDb = toDoRepository.save(toDo);
         return ToDoDto.convertToDto(todoDb, baseUrl);
@@ -84,7 +84,24 @@ public class ToDoServiceImpl implements ToDoService {
 
     @Override
     public ToDoDto update(ToDo toDo) {
+        if (toDo.getStatus() != null && toDo.getStatus().equals(ToDoStatus.DONE)) {
+            throw ToDoExceptionFactory.UNSUPPORTED_OPERATION;
+        }
         ToDoDto toDoDto = getToDo(toDo.getId());
+        toDo.setStatus(toDoDto.getStatus());
+
+        if (StringUtils.isEmpty(toDo.getTitle())) {
+            toDo.setTitle(toDoDto.getTitle());
+        }
+
+        if (StringUtils.isEmpty(toDo.getDescription())) {
+            toDo.setDescription(toDoDto.getDescription());
+        }
+
+        if (toDo.getPriority() == null) {
+            toDo.setPriority(Priority.valueOf(toDoDto.getPriority()));
+        }
+
         ToDo todoDb = toDoRepository.save(toDo);
         return ToDoDto.convertToDto(todoDb, baseUrl);
     }
@@ -109,7 +126,17 @@ public class ToDoServiceImpl implements ToDoService {
 
     @Override
     public List<ToDoDto> searchToDo(ToDoSearchField seachField) {
-        return null;
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ToDo> cq = cb.createQuery(ToDo.class);
+
+        List<Predicate> predicates = getPredicates(seachField, cb, cq);
+
+        cq.where(predicates.toArray(new Predicate[0]));
+
+        List<ToDo> todos = em.createQuery(cq).getResultList();
+        Collections.sort(todos);
+
+        return ToDoDto.convertToDto(todos, baseUrl);
     }
 
     private List<Predicate> getPredicates(ToDoSearchField seachField,
@@ -120,25 +147,10 @@ public class ToDoServiceImpl implements ToDoService {
 
 
         if (!StringUtils.isEmpty(seachField.getStatus())) {
-            predicates.add(cb.equal(todo.get("status"), seachField.getStatus()));
+            predicates.add(cb.equal(todo.get("status"), ToDoStatus.valueOf(seachField.getStatus())));
         }
 
         return predicates;
-    }
-
-    public List<ToDoDto> searchTask(ToDoSearchField seachField) {
-
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<ToDo> cq = cb.createQuery(ToDo.class);
-
-        List<Predicate> predicates = getPredicates(seachField, cb, cq);
-
-        cq.where(predicates.toArray(new Predicate[0]));
-
-        List<ToDo> tasks = em.createQuery(cq).getResultList();
-
-        return ToDoDto.convertToDto(tasks, baseUrl);
-
     }
 
 

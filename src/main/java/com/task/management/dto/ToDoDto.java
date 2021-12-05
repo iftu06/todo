@@ -21,8 +21,6 @@ public class ToDoDto {
 
     private String description;
 
-    private String dueDate;
-
     private ToDoStatus status;
 
     private String priority;

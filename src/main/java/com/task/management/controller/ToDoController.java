@@ -5,6 +5,7 @@ import com.task.management.Utillity.ErrorMapper;
 import com.task.management.Utillity.ToDoSearchField;
 import com.task.management.dto.ToDoDto;
 import com.task.management.error.ReturnStatus;
+import com.task.management.exception.ToDoException;
 import com.task.management.model.ToDo;
 import com.task.management.service.ToDoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,11 +49,12 @@ public class ToDoController {
                             .status(ReturnStatus.SUCCESS)
                             .message("ToDO Created Successfully")
                             .build());
-        } catch (HttpClientErrorException exp) {
+        } catch (ToDoException exp) {
             return ApiResponse.builder()
                     .status(ReturnStatus.ERROR)
-                    .httpStatus(HttpStatus.NOT_IMPLEMENTED)
-                    .message("Reason Unknown")
+                    .httpStatus(exp.getError().getHttpStatusCode())
+                    .message(exp.getError().getErrorMessage())
+                    .code(exp.getError().getErrorCode())
                     .build();
 
         }
@@ -80,10 +82,21 @@ public class ToDoController {
     @CrossOrigin
     @GetMapping(value = "/todos/{id}")
     public Object list(@PathVariable Integer id) {
-        ToDoDto toDoDto = toDoService.getToDo(id);
-        return ApiResponse.builder()
-                .body(toDoDto).status(ReturnStatus.SUCCESS)
-                .httpStatus(HttpStatus.FOUND).build();
+        try {
+            ToDoDto toDoDto = toDoService.getToDo(id);
+            return ApiResponse.builder()
+                    .body(toDoDto).status(ReturnStatus.SUCCESS)
+                    .httpStatus(HttpStatus.FOUND).build();
+
+        } catch (ToDoException exp) {
+            return ApiResponse.builder()
+                    .status(ReturnStatus.ERROR)
+                    .httpStatus(exp.getError().getHttpStatusCode())
+                    .message(exp.getError().getErrorMessage())
+                    .code(exp.getError().getErrorCode())
+                    .build();
+
+        }
 
     }
 
@@ -92,13 +105,24 @@ public class ToDoController {
     @DeleteMapping(value = "/todos/delete/{id}")
     public Object delete(@PathVariable Integer id) {
 
-        toDoService.remove(id);
+        try {
+            toDoService.remove(id);
 
-        return ApiResponse.builder()
-                .status(ReturnStatus.SUCCESS)
-                .httpStatus(HttpStatus.NO_CONTENT)
-                .message("Successfully deleted")
-                .build();
+            return ApiResponse.builder()
+                    .status(ReturnStatus.SUCCESS)
+                    .httpStatus(HttpStatus.NO_CONTENT)
+                    .message("Successfully deleted")
+                    .build();
+
+        } catch (ToDoException exp) {
+            return ApiResponse.builder()
+                    .status(ReturnStatus.ERROR)
+                    .httpStatus(exp.getError().getHttpStatusCode())
+                    .message(exp.getError().getErrorMessage())
+                    .code(exp.getError().getErrorCode())
+                    .build();
+
+        }
 
     }
 
@@ -117,25 +141,46 @@ public class ToDoController {
                     .build();
         }
 
-        ToDoDto taskDto = toDoService.update(toDo);
-        return ResponseEntity.ok()
-                .body(ApiResponse.builder().body(taskDto)
-                        .httpStatus(HttpStatus.CREATED)
-                        .status(ReturnStatus.SUCCESS)
-                        .message("Todo Updated Successfully")
-                        .build());
+        try {
+            ToDoDto toDoDto = toDoService.update(toDo);
+            return ResponseEntity.ok()
+                    .body(ApiResponse.builder().body(toDoDto)
+                            .httpStatus(HttpStatus.CREATED)
+                            .status(ReturnStatus.SUCCESS)
+                            .message("Todo Updated Successfully")
+                            .build());
 
+        } catch (ToDoException exp) {
+            return ApiResponse.builder()
+                    .status(ReturnStatus.ERROR)
+                    .httpStatus(exp.getError().getHttpStatusCode())
+                    .message(exp.getError().getErrorMessage())
+                    .code(exp.getError().getErrorCode())
+                    .build();
+
+        }
 
     }
 
     @CrossOrigin
     @RequestMapping(value = "/todos/search", method = RequestMethod.GET)
-    public ApiResponse searchTask(ToDoSearchField seachField) {
-        List<ToDoDto> tasks = toDoService.searchToDo(seachField);
-        return ApiResponse.builder().httpStatus(HttpStatus.FOUND)
-                .status(ReturnStatus.SUCCESS)
-                .body(tasks)
-                .build();
+    public ApiResponse searchToDo(ToDoSearchField seachField) {
+        try {
+            List<ToDoDto> todos = toDoService.searchToDo(seachField);
+            return ApiResponse.builder().httpStatus(HttpStatus.FOUND)
+                    .status(ReturnStatus.SUCCESS)
+                    .body(todos)
+                    .build();
+
+        } catch (ToDoException exp) {
+            return ApiResponse.builder()
+                    .status(ReturnStatus.ERROR)
+                    .httpStatus(exp.getError().getHttpStatusCode())
+                    .message(exp.getError().getErrorMessage())
+                    .code(exp.getError().getErrorCode())
+                    .build();
+
+        }
 
     }
 
@@ -144,14 +189,24 @@ public class ToDoController {
     @PutMapping(value = "/todos/markAsDone/{id}")
     public Object markasDone(@PathVariable Integer id) {
 
-        ToDoDto taskDto = toDoService.markAsDone(id);
-        return ResponseEntity.ok()
-                .body(ApiResponse.builder().body(taskDto)
-                        .httpStatus(HttpStatus.OK)
-                        .status(ReturnStatus.SUCCESS)
-                        .message("TODO is completed")
-                        .build());
+        try {
+            ToDoDto todoDto = toDoService.markAsDone(id);
+            return ResponseEntity.ok()
+                    .body(ApiResponse.builder().body(todoDto)
+                            .httpStatus(HttpStatus.OK)
+                            .status(ReturnStatus.SUCCESS)
+                            .message("TODO is completed")
+                            .build());
 
+        } catch (ToDoException exp) {
+            return ApiResponse.builder()
+                    .status(ReturnStatus.ERROR)
+                    .httpStatus(exp.getError().getHttpStatusCode())
+                    .message(exp.getError().getErrorMessage())
+                    .code(exp.getError().getErrorCode())
+                    .build();
+
+        }
 
     }
 

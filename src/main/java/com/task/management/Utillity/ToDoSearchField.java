@@ -1,5 +1,8 @@
 package com.task.management.Utillity;
 
+import lombok.Data;
+
+@Data
 public class ToDoSearchField {
     private String status;
 
